@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Stack — STACKLY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0a0a16;
+    --surface:#14132a;
+    --surface-2:#1c1a3a;
+    --surface-3:#242145;
+    --pink:#ff3d7f;
+    --lime:#c6ff3d;
+    --violet:#7b61ff;
+    --red:#ff5c5c;
+    --text:#f2f1fb;
+    --muted:#9591bd;
+    --line:rgba(242,241,251,0.09);
+    --font-display:'Unbounded', sans-serif;
+    --font-body:'Plus Jakarta Sans', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--void);color:var(--text);font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  img{display:block;max-width:100%;}
+  a{color:inherit;text-decoration:none;}
+  ul{list-style:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input{font-family:inherit;}
+  ::selection{background:var(--pink);color:var(--void);}
+
+  .shell{display:flex;min-height:100vh;}
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    width:264px;flex:0 0 264px;background:var(--surface);
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;
+    position:fixed;top:0;bottom:0;left:0;z-index:50;
+    transition:transform 0.3s ease;
+  }
+  .side-top{padding:26px 22px;border-bottom:1px solid var(--line);}
+  .logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:1.1rem;}
+  .logo-mark{
+    width:32px;height:32px;border-radius:9px;background:linear-gradient(145deg,var(--pink),var(--violet));
+    display:flex;align-items:center;justify-content:center;position:relative;
+  }
+  .logo-mark span{position:absolute;background:var(--void);border-radius:2px;width:15px;height:2.6px;}
+  .logo-mark .b1{top:9px;} .logo-mark .b2{top:14.7px;} .logo-mark .b3{top:20.4px;}
+  .role-tag{
+    margin-top:14px;display:inline-flex;align-items:center;gap:7px;
+    font-family:var(--font-mono);font-size:0.7rem;letter-spacing:0.06em;
+    color:var(--violet);background:rgba(123,97,255,0.1);border:1px solid rgba(123,97,255,0.3);
+    padding:5px 11px;border-radius:100px;text-transform:uppercase;
+  }
+  .role-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--violet);}
+
+  nav.side-nav{flex:1;padding:18px 14px;overflow-y:auto;}
+  .nav-label{
+    font-family:var(--font-mono);font-size:0.68rem;letter-spacing:0.1em;color:var(--muted);
+    text-transform:uppercase;padding:14px 12px 8px;
+  }
+  .side-nav a{
+    display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;
+    font-size:0.9rem;font-weight:600;color:var(--muted);margin-bottom:2px;
+    border-left:2px solid transparent;transition:background 0.2s ease,color 0.2s ease;
+  }
+  .side-nav a svg{flex:0 0 18px;stroke:var(--muted);transition:stroke 0.2s ease;}
+  .side-nav a:hover{background:rgba(255,255,255,0.03);color:var(--text);}
+  .side-nav a:hover svg{stroke:var(--text);}
+  .side-nav a.active{background:var(--surface-2);color:var(--text);border-left:2px solid var(--violet);}
+  .side-nav a.active svg{stroke:var(--violet);}
+  .nav-badge{
+    margin-left:auto;font-family:var(--font-mono);font-size:0.68rem;
+    background:var(--violet);color:#fff;padding:2px 7px;border-radius:100px;font-weight:700;
+  }
+
+  .side-bottom{padding:16px 22px 22px;border-top:1px solid var(--line);}
+  .admin-mini{display:flex;align-items:center;gap:10px;}
+  .admin-mini img{width:36px;height:36px;border-radius:10px;object-fit:cover;}
+  .admin-mini b{font-size:0.85rem;display:block;}
+  .admin-mini span{font-size:0.72rem;color:var(--muted);}
+  .logout-link{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:0.82rem;color:var(--muted);font-weight:600;}
+  .logout-link:hover{color:var(--red);}
+  .logout-link svg{stroke:currentColor;}
+
+  /* ---------- main ---------- */
+  .main{flex:1;margin-left:264px;min-width:0;}
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    display:flex;align-items:center;gap:18px;
+    padding:18px 34px;background:rgba(10,10,22,0.75);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .menu-toggle{display:none;flex-direction:column;gap:4px;width:22px;}
+  .menu-toggle span{height:2px;background:var(--text);border-radius:2px;}
+  .search-box{
+    flex:1;max-width:380px;display:flex;align-items:center;gap:10px;
+    background:var(--surface);border:1px solid var(--line);border-radius:100px;padding:9px 16px;
+  }
+  .search-box svg{stroke:var(--muted);flex:0 0 16px;}
+  .search-box input{background:none;border:none;outline:none;color:var(--text);font-size:0.85rem;width:100%;}
+  .search-box input::placeholder{color:var(--muted);}
+  .top-right{margin-left:auto;display:flex;align-items:center;gap:18px;}
+  .icon-btn{position:relative;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--line);}
+  .icon-btn svg{stroke:var(--muted);}
+  .icon-btn:hover svg{stroke:var(--text);}
+  .icon-btn .ping{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 2px var(--surface);}
+  .top-avatar{width:38px;height:38px;border-radius:10px;object-fit:cover;border:1px solid var(--line);}
+  .streak-pill{
+    display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:0.75rem;color:var(--lime);
+    background:rgba(198,255,61,0.08);border:1px solid rgba(198,255,61,0.25);padding:7px 13px;border-radius:100px;
+  }
+
+  .content{padding:34px;}
+  .page-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;}
+  .page-head h1{font-family:var(--font-display);font-weight:700;font-size:1.7rem;}
+  .page-head p{color:var(--muted);margin-top:6px;font-size:0.92rem;}
+  .btn-primary{
+    padding:12px 22px;border-radius:100px;font-weight:700;font-size:0.85rem;
+    background:linear-gradient(100deg,var(--pink),var(--violet));color:#fff;
+    display:inline-flex;align-items:center;gap:8px;transition:transform 0.2s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px);}
+  .btn-ghost{
+    padding:11px 20px;border-radius:100px;font-weight:700;font-size:0.85rem;
+    border:1px solid var(--line);color:var(--text);transition:border-color 0.2s ease;
+  }
+  .btn-ghost:hover{border-color:rgba(242,241,251,0.4);}
+
+  /* ---------- stat cards ---------- */
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:20px;overflow:hidden;margin-bottom:32px;}
+  .stat-card{background:var(--surface);padding:26px 24px;}
+  .stat-top{display:flex;align-items:center;justify-content:space-between;}
+  .stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;}
+  .stat-icon svg{width:17px;height:17px;}
+  .stat-card.c-pink .stat-icon{background:rgba(255,61,127,0.12);} .stat-card.c-pink .stat-icon svg{stroke:var(--pink);}
+  .stat-card.c-lime .stat-icon{background:rgba(198,255,61,0.12);} .stat-card.c-lime .stat-icon svg{stroke:var(--lime);}
+  .stat-card.c-violet .stat-icon{background:rgba(123,97,255,0.15);} .stat-card.c-violet .stat-icon svg{stroke:var(--violet);}
+  .stat-delta{font-family:var(--font-mono);font-size:0.72rem;color:var(--lime);}
+  .stat-num{font-family:var(--font-mono);font-weight:600;font-size:1.9rem;margin-top:18px;}
+  .stat-label{color:var(--muted);font-size:0.85rem;margin-top:4px;}
+
+  /* ---------- section shell ---------- */
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin:36px 0 18px;}
+  .section-title h2{font-family:var(--font-display);font-weight:700;font-size:1.2rem;}
+  .section-title a{font-family:var(--font-mono);font-size:0.78rem;color:var(--muted);}
+  .section-title a:hover{color:var(--text);}
+
+  /* ---------- tracked games ---------- */
+  .games-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+  .game-card{
+    position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--surface);
+    aspect-ratio:3/4;transition:transform 0.3s ease,border-color 0.3s ease;
+  }
+  .game-card:hover{transform:translateY(-6px);border-color:rgba(123,97,255,0.4);}
+  .game-card img{width:100%;height:100%;object-fit:cover;}
+  .game-card .shade{position:absolute;inset:0;background:linear-gradient(185deg,rgba(10,10,22,0.05) 30%,rgba(10,10,22,0.95) 100%);}
+  .game-card .trend{
+    position:absolute;top:12px;right:12px;font-family:var(--font-mono);font-size:0.68rem;color:var(--lime);
+    background:rgba(10,10,22,0.6);border:1px solid rgba(198,255,61,0.3);padding:4px 8px;border-radius:100px;
+  }
+  .game-card .progress-tag{
+    position:absolute;top:12px;left:12px;font-family:var(--font-mono);font-size:0.68rem;color:var(--violet);
+    background:rgba(10,10,22,0.6);border:1px solid rgba(123,97,255,0.35);padding:4px 8px;border-radius:100px;
+  }
+  .game-card .info{position:absolute;bottom:0;left:0;right:0;padding:16px;}
+  .game-card .info .genre{font-family:var(--font-mono);font-size:0.66rem;color:var(--muted);text-transform:uppercase;}
+  .game-card .info h4{font-family:var(--font-display);font-size:0.98rem;font-weight:700;margin-top:4px;}
+  .game-card .info .hrs{font-size:0.72rem;color:var(--muted);margin-top:3px;}
+
+  /* ---------- two-col: activity + leaderboard ---------- */
+  .two-col{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;margin-top:8px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:26px;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+  .panel-head h3{font-family:var(--font-display);font-size:1.05rem;font-weight:700;}
+
+  /* activity feed */
+  .feed{display:flex;flex-direction:column;}
+  .feed-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .feed-item:last-child{border-bottom:none;padding-bottom:0;}
+  .feed-icon{
+    width:36px;height:36px;border-radius:10px;flex:0 0 36px;display:flex;align-items:center;justify-content:center;
+  }
+  .feed-icon svg{width:16px;height:16px;}
+  .feed-icon.a-lime{background:rgba(198,255,61,0.12);} .feed-icon.a-lime svg{stroke:var(--lime);}
+  .feed-icon.a-pink{background:rgba(255,61,127,0.12);} .feed-icon.a-pink svg{stroke:var(--pink);}
+  .feed-icon.a-violet{background:rgba(123,97,255,0.15);} .feed-icon.a-violet svg{stroke:var(--violet);}
+  .feed-body p{font-size:0.86rem;line-height:1.5;}
+  .feed-body p b{font-weight:700;}
+  .feed-body span{display:block;font-size:0.72rem;color:var(--muted);margin-top:3px;font-family:var(--font-mono);}
+
+  /* leaderboard */
+  .lead-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .lead-row:last-child{border-bottom:none;}
+  .lead-rank{
+    font-family:var(--font-mono);font-weight:600;font-size:0.9rem;color:var(--muted);width:24px;text-align:center;
+  }
+  .lead-row.me .lead-rank{color:var(--lime);}
+  .lead-row img{width:38px;height:38px;border-radius:50%;object-fit:cover;}
+  .lead-name{flex:1;}
+  .lead-name b{font-size:0.87rem;font-weight:700;display:block;}
+  .lead-name span{font-size:0.72rem;color:var(--muted);}
+  .lead-score{font-family:var(--font-mono);font-size:0.86rem;text-align:right;}
+  .lead-change{font-family:var(--font-mono);font-size:0.7rem;}
+  .lead-change.up{color:var(--lime);} .lead-change.down{color:var(--red);}
+  .lead-row.me{background:rgba(123,97,255,0.06);margin:0 -12px;padding:12px;border-radius:12px;border-bottom:none;}
+
+  /* profile card */
+  .profile-panel{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--line);}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row div b{font-size:0.86rem;display:block;}
+  .toggle-row div span{font-size:0.74rem;color:var(--muted);}
+  .switch{width:42px;height:24px;border-radius:100px;background:var(--surface-2);border:1px solid var(--line);position:relative;flex:0 0 42px;}
+  .switch::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:var(--muted);top:2px;left:2px;transition:all 0.2s ease;}
+  .switch.on{background:rgba(123,97,255,0.25);border-color:rgba(123,97,255,0.5);}
+  .switch.on::after{left:20px;background:var(--violet);}
+  .profile-summary{display:flex;flex-direction:column;align-items:center;text-align:center;padding:36px 20px;}
+  .profile-summary img{width:78px;height:78px;border-radius:20px;object-fit:cover;margin-bottom:16px;}
+  .profile-summary h3{font-family:var(--font-display);font-size:1.15rem;}
+  .profile-summary span{font-size:0.8rem;color:var(--muted);margin-top:4px;}
+  .profile-summary .btn-ghost{margin-top:18px;}
+
+  footer.foot-note{padding:26px 34px 50px;color:var(--muted);font-size:0.78rem;font-family:var(--font-mono);}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(10,10,22,0.6);z-index:45;}
+
+  @media(max-width:1180px){
+    .games-grid{grid-template-columns:repeat(3,1fr);}
+    .two-col{grid-template-columns:1fr;}
+    .profile-panel{grid-template-columns:1fr;}
+  }
+  @media(max-width:980px){
+    .stats-row{grid-template-columns:1fr 1fr;}
+    .games-grid{grid-template-columns:repeat(2,1fr);}
+    .sidebar{transform:translateX(-100%);}
+    .sidebar.open{transform:translateX(0);}
+    .main{margin-left:0;}
+    .menu-toggle{display:flex;}
+    .search-box{display:none;}
+    .overlay.open{display:block;}
+  }
+  @media(max-width:640px){
+    .stats-row{grid-template-columns:1fr;}
+    .games-grid{grid-template-columns:1fr 1fr;}
+    .content{padding:22px 18px;}
+    .streak-pill span.txt{display:none;}
+  }
+
+  /* ---------- preloader ---------- */
+  html.pl-lock, html.pl-lock body{overflow:hidden;}
+
+  .preloader{
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .pl-panel{
+    position:absolute;top:0;bottom:0;width:50%;background:var(--void);z-index:1;
+    transition:transform 0.85s cubic-bezier(.76,0,.24,1);
+    will-change:transform;
+  }
+  .pl-panel.pl-left{left:0;}
+  .pl-panel.pl-right{right:0;}
+
+  .preloader-inner{
+    position:relative;z-index:2;
+    display:flex;flex-direction:column;align-items:center;
+    transition:opacity 0.5s ease, transform 0.6s ease;
+    will-change:opacity, transform;
+  }
+
+  .pl-mark{display:flex;flex-direction:column;gap:7px;width:132px;margin-bottom:30px;}
+  .pl-row{
+    height:7px;border-radius:4px;transform-origin:left;transform:scaleX(0);opacity:0.35;
+    animation:pl-grow 1.8s cubic-bezier(.65,0,.35,1) infinite;
+  }
+  .pl-row.r1{width:100%;background:linear-gradient(90deg,var(--pink),var(--violet));animation-delay:0s;}
+  .pl-row.r2{width:76%;background:linear-gradient(90deg,var(--violet),var(--pink));animation-delay:0.12s;}
+  .pl-row.r3{width:56%;background:linear-gradient(90deg,var(--pink),var(--lime));animation-delay:0.24s;}
+  .pl-row.r4{width:36%;background:linear-gradient(90deg,var(--lime),var(--violet));animation-delay:0.36s;}
+  @keyframes pl-grow{
+    0%{transform:scaleX(0);opacity:0.35;}
+    38%{transform:scaleX(1);opacity:1;}
+    75%{transform:scaleX(1);opacity:1;}
+    100%{transform:scaleX(0);opacity:0.35;}
+  }
+  .preloader.pl-done .pl-row{animation:none;transform:scaleX(1);opacity:1;}
+
+  .pl-word{
+    font-family:var(--font-display);font-weight:800;font-size:1.85rem;letter-spacing:0.04em;color:var(--text);
+    opacity:0;transform:translateY(10px);
+    animation:pl-word-in 0.7s ease 0.2s forwards;
+  }
+  @keyframes pl-word-in{to{opacity:1;transform:translateY(0);}}
+
+  .pl-status-row{
+    display:flex;align-items:center;gap:8px;margin-top:20px;
+    font-family:var(--font-mono);font-size:0.72rem;letter-spacing:0.08em;
+    color:var(--muted);text-transform:uppercase;
+  }
+  .pl-status-row .dot{width:5px;height:5px;border-radius:50%;background:var(--lime);animation:pulse 1.6s infinite;flex:none;}
+  .pl-status{min-width:186px;text-align:left;}
+
+  .pl-progress-row{display:flex;align-items:center;gap:14px;margin-top:24px;}
+  .pl-track{width:190px;height:2px;border-radius:2px;background:var(--line);overflow:hidden;}
+  .pl-fill{height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,var(--pink),var(--lime));}
+  .pl-percent{font-family:var(--font-mono);font-size:0.78rem;color:var(--text);min-width:38px;}
+
+  .preloader.pl-exit{pointer-events:none;}
+  .preloader.pl-exit .preloader-inner{opacity:0;transform:translateY(-16px) scale(0.96);}
+  .preloader.pl-exit .pl-panel.pl-left{transform:translateX(-101%) rotate(-2deg);}
+  .preloader.pl-exit .pl-panel.pl-right{transform:translateX(101%) rotate(2deg);}
+
+  .preloader.pl-hidden{display:none;}
+
+  @media(max-width:560px){
+    .pl-mark{width:112px;}
+    .pl-word{font-size:1.5rem;}
+    .pl-track{width:140px;}
+    .pl-status-row{font-size:0.64rem;}
+    .pl-status{min-width:150px;}
+  }
+
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+
+  /* logo image override */
+  a.logo{display:inline-flex;align-items:center;text-decoration:none;}
+  a.logo img{height:44px;width:auto;object-fit:contain;}
+
+</style>
+</head>
+<body>
+
+<!-- PRELOADER -->
+<div class="preloader" id="preloader" role="status" aria-live="polite" aria-label="Loading Stackly, please wait">
+  <div class="pl-panel pl-left"></div>
+  <div class="pl-panel pl-right"></div>
+  <div class="preloader-inner" aria-hidden="true">
+    <div class="pl-mark">
+      <span class="pl-row r1"></span>
+      <span class="pl-row r2"></span>
+      <span class="pl-row r3"></span>
+      <span class="pl-row r4"></span>
+    </div>
+    <div class="pl-word">STACKLY</div>
+    <div class="pl-status-row">
+      <span class="dot"></span>
+      <span class="pl-status" id="plStatus">Scanning player counts</span>
+    </div>
+    <div class="pl-progress-row">
+      <div class="pl-track"><div class="pl-fill" id="plFill"></div></div>
+      <span class="pl-percent" id="plPercent">00%</span>
+    </div>
+  </div>
+</div>
+<noscript><style>.preloader{display:none!important;}</style></noscript>
+<script>
+(function(){
+  var preloader=document.getElementById('preloader');
+  if(!preloader)return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){preloader.classList.add('pl-hidden');return;}
+  document.documentElement.classList.add('pl-lock');
+  var fill=document.getElementById('plFill');
+  var percentEl=document.getElementById('plPercent');
+  var statusEl=document.getElementById('plStatus');
+  var messages=['Scanning player counts','Syncing live rankings','Stacking trending titles','Loading Stackly'];
+  var msgIndex=0;
+  var msgTimer=setInterval(function(){msgIndex=(msgIndex+1)%messages.length;statusEl.textContent=messages[msgIndex];},650);
+  var startTime=performance.now(),minVisible=1500,target=6,shown=0,finished=false;
+  var loaded=document.readyState==='complete';
+  window.addEventListener('load',function(){loaded=true;});
+  setTimeout(function(){loaded=true;},6000);
+  function tick(){
+    if(finished)return;
+    var ceiling=loaded?100:90;
+    target+=(ceiling-target)*(loaded?0.12:0.045)+0.15;
+    target=Math.min(target,ceiling);
+    shown+=(target-shown)*0.2;
+    if(Math.abs(target-shown)<0.1)shown=target;
+    var v=Math.min(100,Math.round(shown));
+    fill.style.width=v+'%';
+    percentEl.textContent=String(v).padStart(2,'0')+'%';
+    if(v>=100&&loaded){
+      finished=true;clearInterval(msgTimer);statusEl.textContent='Ready';
+      var elapsed=performance.now()-startTime;
+      setTimeout(exit,Math.max(0,minVisible-elapsed)+280);
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  function exit(){
+    preloader.classList.add('pl-done','pl-exit');
+    preloader.setAttribute('aria-label','Stackly loaded');
+    document.documentElement.classList.remove('pl-lock');
+    setTimeout(function(){preloader.classList.add('pl-hidden');},900);
+  }
+})();
+</script>
+
+
+<div class="overlay" id="overlay"></div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="side-top">
+      <a href="index.html" class="logo"><img src="img/Logo.webp" alt="Stackly" height="44" style="display:block;"></a>
+      <div class="role-tag"><span class="dot"></span>My Stack</div>
+    </div>
+
+    <nav class="side-nav">
+      <div class="nav-label">Home</div>
+      <a href="#overview" class="active">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>
+        Overview
+      </a>
+      <a href="#mygames">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="8" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="16" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg>
+        My games
+      </a>
+      <a href="#activity">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>
+        Activity
+      </a>
+      <a href="#leaderboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 01-12 0V4z"/><path d="M6 6H3a3 3 0 003 3M18 6h3a3 3 0 01-3 3"/></svg>
+        Leaderboard
+      </a>
+
+      <div class="nav-label">Account</div>
+      <a href="#profile">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></svg>
+        Profile
+      </a>
+    </nav>
+
+    <div class="side-bottom">
+      <div class="admin-mini">
+        <img src="img/portrait_men_32.webp" alt="">
+        <div>
+          <b id="u-sidebar-name">Arjun R.</b>
+          <span id="u-sidebar-handle">@arjunplays</span>
+        </div>
+      </div>
+      <a href="#" class="logout-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button class="menu-toggle" id="menuToggle"><span></span><span></span><span></span></button>
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" placeholder="Search games, players…">
+      </div>
+      <div class="top-right">
+        <div class="streak-pill">🔥 <span class="txt">12-day streak</span></div>
+        <button class="icon-btn" aria-label="Notifications">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <span class="ping"></span>
+        </button>
+        <img class="top-avatar" src="img/portrait_men_32.webp" alt="Your avatar">
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="page-head" id="overview">
+        <div>
+          <h1>Welcome back, <span id="u-greeting-name">Arjun</span></h1>
+          <p>Your stack is heating up — here's what's new since your last visit.</p>
+        </div>
+        <button class="btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Track a game
+        </button>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card c-pink">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg></div>
+            <span class="stat-delta">▲ 6.5h</span>
+          </div>
+          <div class="stat-num">22.5h</div>
+          <div class="stat-label">Played this week</div>
+        </div>
+        <div class="stat-card c-violet">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="5"/><circle cx="8" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+            <span class="stat-delta">+2 new</span>
+          </div>
+          <div class="stat-num">14</div>
+          <div class="stat-label">Games tracked</div>
+        </div>
+        <div class="stat-card c-lime">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 01-12 0V4z"/></svg></div>
+            <span class="stat-delta">▲ 8 spots</span>
+          </div>
+          <div class="stat-num">#142</div>
+          <div class="stat-label">Global rank</div>
+        </div>
+        <div class="stat-card c-pink">
+          <div class="stat-top">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 4-2 5-2 9a4 4 0 108 0c0-1.5-1-2.5-1-2.5s.5 2-1.5 2.5C17 9 15 6 12 2z"/></svg></div>
+            <span class="stat-delta">Day 12</span>
+          </div>
+          <div class="stat-num">12</div>
+          <div class="stat-label">Day streak</div>
+        </div>
+      </div>
+
+      <!-- TRACKED GAMES -->
+      <div class="section-title" id="mygames">
+        <h2>Your tracked games</h2>
+        <a href="#">View all →</a>
+      </div>
+      <div class="games-grid">
+        <div class="game-card">
+          <img src="img/photo-1610561212775-b191f21b6998.webp" alt="">
+          <div class="shade"></div>
+          <div class="progress-tag">4.5h this wk</div>
+          <div class="trend">▲ 34%</div>
+          <div class="info"><span class="genre">Racing</span><h4>Neon Drift</h4><span class="hrs">Last played today</span></div>
+        </div>
+        <div class="game-card">
+          <img src="img/photo-1644560286950-1807431fc64f.webp" alt="">
+          <div class="shade"></div>
+          <div class="progress-tag">6h this wk</div>
+          <div class="trend">▲ 21%</div>
+          <div class="info"><span class="genre">Strategy</span><h4>Grid Zero</h4><span class="hrs">Last played today</span></div>
+        </div>
+        <div class="game-card">
+          <img src="img/photo-1700085664050-43cea0e1c3fd.webp" alt="">
+          <div class="shade"></div>
+          <div class="progress-tag">2h this wk</div>
+          <div class="trend">▲ 18%</div>
+          <div class="info"><span class="genre">Battle Royale</span><h4>Void Runners</h4><span class="hrs">Last played 2d ago</span></div>
+        </div>
+        <div class="game-card">
+          <img src="img/photo-1558008258-7ff8888b42b0.webp" alt="">
+          <div class="shade"></div>
+          <div class="progress-tag">10h this wk</div>
+          <div class="trend">▲ 96%</div>
+          <div class="info"><span class="genre">Extraction</span><h4>Ashfall</h4><span class="hrs">Last played today</span></div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY + LEADERBOARD -->
+      <div class="two-col">
+        <div class="panel" id="activity">
+          <div class="panel-head"><h3>Recent activity</h3></div>
+          <div class="feed">
+            <div class="feed-item">
+              <div class="feed-icon a-lime"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.5 6.5L21 11l-6.5 2.5L12 20l-2.5-6.5L3 11l6.5-2.5L12 2z"/></svg></div>
+              <div class="feed-body">
+                <p>Unlocked <b>"Speed Demon"</b> in Neon Drift: Overpass</p>
+                <span>Today · 2:14 PM</span>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-icon a-pink"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 01-12 0V4z"/></svg></div>
+              <div class="feed-body">
+                <p>Climbed to <b>#142</b> on the global leaderboard</p>
+                <span>Today · 11:02 AM</span>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-icon a-violet"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="5"/></svg></div>
+              <div class="feed-body">
+                <p>Started tracking <b>Ashfall: Ember Protocol</b></p>
+                <span>Yesterday · 8:40 PM</span>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-icon a-lime"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></div>
+              <div class="feed-body">
+                <p>Joined the weekend tournament for <b>Grid Zero</b></p>
+                <span>Yesterday · 6:15 PM</span>
+              </div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-icon a-pink"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 4-2 5-2 9a4 4 0 108 0c0-1.5-1-2.5-1-2.5s.5 2-1.5 2.5C17 9 15 6 12 2z"/></svg></div>
+              <div class="feed-body">
+                <p>Hit a <b>12-day</b> play streak</p>
+                <span>Yesterday · 9:00 AM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" id="leaderboard">
+          <div class="panel-head"><h3>Friends leaderboard</h3></div>
+          <div class="lead-list">
+            <div class="lead-row">
+              <div class="lead-rank">1</div>
+              <img src="img/portrait_women_44.webp" alt="">
+              <div class="lead-name"><b>Meera S.</b><span>@meeragrid</span></div>
+              <div>
+                <div class="lead-score">18,420</div>
+                <div class="lead-change up" style="text-align:right;">▲ 2</div>
+              </div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-rank">2</div>
+              <img src="img/portrait_men_65.webp" alt="">
+              <div class="lead-name"><b>Dev K.</b><span>@devplaysmobile</span></div>
+              <div>
+                <div class="lead-score">16,980</div>
+                <div class="lead-change down" style="text-align:right;">▼ 1</div>
+              </div>
+            </div>
+            <div class="lead-row me">
+              <div class="lead-rank">3</div>
+              <img src="img/portrait_men_32.webp" alt="">
+              <div class="lead-name"><b id="u-lead-name">Arjun R. (you)</b><span id="u-lead-handle">@arjunplays</span></div>
+              <div>
+                <div class="lead-score">15,730</div>
+                <div class="lead-change up" style="text-align:right;">▲ 8</div>
+              </div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-rank">4</div>
+              <img src="img/portrait_women_68.webp" alt="">
+              <div class="lead-name"><b>Priya N.</b><span>@priyaplays</span></div>
+              <div>
+                <div class="lead-score">14,205</div>
+                <div class="lead-change down" style="text-align:right;">▼ 2</div>
+              </div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-rank">5</div>
+              <img src="img/portrait_men_78.webp" alt="">
+              <div class="lead-name"><b>Rahul V.</b><span>@rahulv</span></div>
+              <div>
+                <div class="lead-score">13,884</div>
+                <div class="lead-change up" style="text-align:right;">▲ 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="section-title" id="profile">
+        <h2>Profile & preferences</h2>
+      </div>
+      <div class="profile-panel">
+        <div class="panel profile-summary">
+          <img src="img/portrait_men_32.webp" alt="">
+          <h3 id="u-profile-name">Arjun R.</h3>
+          <span id="u-profile-handle">@arjunplays · Member since Jan 2026</span>
+          <button class="btn-ghost">Edit profile</button>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Preferences</h3></div>
+          <div class="toggle-row">
+            <div><b>Trending alerts</b><span>Notify me when tracked games move up 10%+</span></div>
+            <div class="switch on"></div>
+          </div>
+          <div class="toggle-row">
+            <div><b>Tournament invites</b><span>Let friends invite you to squads</span></div>
+            <div class="switch on"></div>
+          </div>
+          <div class="toggle-row">
+            <div><b>Public profile</b><span>Show your stats on the leaderboard</span></div>
+            <div class="switch"></div>
+          </div>
+          <div class="toggle-row">
+            <div><b>Weekly digest email</b><span>One email a week, top 5 movers</span></div>
+            <div class="switch on"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="foot-note">STACKLY · My Stack updates in real time · Salem, Tamil Nadu, India</footer>
+  </div>
+</div>
+
+<script>
+  // ---------- Inject profile from sessionStorage ----------
+  (function(){
+    const email = sessionStorage.getItem('stackly_email') || '';
+    if (!email) return;
+    // Split local part on . _ - and capitalise each word to get a proper name
+    const raw = email.split('@')[0];
+    const parts = raw.split(/[._-]/).filter(Boolean);
+    const displayName = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join(' ');
+    const firstName   = parts[0] ? parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase() : displayName;
+    const handle      = '@' + raw.toLowerCase().replace(/[._-]/g, '');
+
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('u-sidebar-name',   displayName);
+    set('u-sidebar-handle', handle);
+    set('u-greeting-name',  firstName);
+    set('u-lead-name',      displayName + ' (you)');
+    set('u-lead-handle',    handle);
+    set('u-profile-name',   displayName);
+    set('u-profile-handle', handle + ' · Member since ' + new Date().getFullYear());
+  })();
+
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+
+  document.querySelectorAll('.switch').forEach(sw => {
+    sw.addEventListener('click', () => sw.classList.toggle('on'));
+  });
+
+  // Logout clears session
+  document.querySelector('.logout-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+  });
+
+  // Redirect mock buttons and links to 404.html
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('a, button');
+    if (!target) return;
+
+    // Allow mobile toggle, switches, and logout
+    if (target.id === 'menuToggle' || target.classList.contains('switch') || target.classList.contains('logout-link') || target.closest('.logout-link')) {
+      return;
+    }
+    // Allow index logo navigation
+    if (target.classList.contains('logo') || target.closest('.logo')) {
+      return;
+    }
+    // Allow internal hash scrolls (e.g. #overview, #mygames) to scroll instead of redirecting
+    const href = target.getAttribute('href');
+    if (href && href.startsWith('#') && href !== '#') {
+      return;
+    }
+
+    // Redirect mock interactions to 404.html
+    e.preventDefault();
+    window.location.href = '404.html';
+  });
+</script>
+
+</body>
+</html>
